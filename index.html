@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Photo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        #video-container {
+            width: 100%;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+        }
+        #videoElement {
+            width: 100%;
+            height: auto;
+            transform: scaleX(-1); /* Flip the camera view horizontally */
+        }
+        #captureBtn {
+            background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+        #captureBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        .status {
+            margin-top: 20px;
+            font-size: 1.1em;
+            min-height: 25px;
+        }
+        #canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📸 Capture and Send Photo</h1>
+    <div id="video-container">
+        <video id="videoElement" autoplay></video>
+    </div>
+    <button id="captureBtn">Take a Picture</button>
+    <p id="status" class="status">Click "Take a Picture" to open your camera.</p>
+    <canvas id="canvas"></canvas>
+</div>
+
+<script>
+    const video = document.getElementById('videoElement');
+    const captureBtn = document.getElementById('captureBtn');
+    const statusText = document.getElementById('status');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    
+    // Replace with your new Google Apps Script Web App URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqtx8aTixah9SZJ4U_6lqry4w10nBlpfV0kGxafN_wLfNb8EipZzjA0Q-qVBTlHvmFdQ/exec";
+
+    // Request camera access
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            video.srcObject = stream;
+            statusText.textContent = "Camera is active. Click the button to capture a photo.";
+        })
+        .catch(err => {
+            console.error("Error accessing camera: ", err);
+            statusText.textContent = "Error: Camera access denied or not available. " + err.name;
+        });
+
+    captureBtn.addEventListener('click', () => {
+        statusText.textContent = "Capturing photo...";
+        
+        // Set canvas dimensions to match video stream
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw the video frame onto the canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert canvas content to a Base64 encoded PNG image
+        const imageData = canvas.toDataURL('image/png');
+        
+        // Send the image data to Google Apps Script
+        sendImageToGoogleSheet(imageData);
+    });
+
+    function sendImageToGoogleSheet(imageData) {
+        statusText.textContent = "Sending photo to server...";
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image: imageData
+            }),
+        })
+        .then(() => {
+            statusText.textContent = "Photo successfully saved to Google Sheet!";
+            statusText.style.color = 'green';
+            console.log("Image saved to Google Sheet successfully!");
+        })
+        .catch((error) => {
+            statusText.textContent = "Error sending photo. Check your network.";
+            statusText.style.color = '#dc3545';
+            console.error('An error occurred while sending data:', error);
+        });
+    }
+
+</script>
+
+</body>
+</html>
