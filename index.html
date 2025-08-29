@@ -88,8 +88,8 @@
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
     
-    // Replace with your new Google Apps Script Web App URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqtx8aTixah9SZJ4U_6lqry4w10nBlpfV0kGxafN_wLfNb8EipZzjA0Q-qVBTlHvmFdQ/exec";
+    // Google Apps Script Web App URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwz8LAOeqNxDWr45hQVXESmoUwE9Z-gWoJD90Z0CdeFCcyTnVbjvSw69bwY-tFQfzqZig/exec";
 
     // Request camera access
     navigator.mediaDevices.getUserMedia({ video: true })
@@ -105,17 +105,13 @@
     captureBtn.addEventListener('click', () => {
         statusText.textContent = "Capturing photo...";
         
-        // Set canvas dimensions to match video stream
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
-        // Draw the video frame onto the canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Convert canvas content to a Base64 encoded PNG image
         const imageData = canvas.toDataURL('image/png');
         
-        // Send the image data to Google Apps Script
         sendImageToGoogleSheet(imageData);
     });
 
